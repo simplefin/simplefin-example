@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+<head>
+  <style>
+    table.form th {
+      text-align: left;
+      font-family: sans-serif;
+    }
+    h1,h2,h3,h4,h5 {
+      font-family: sans-serif;
+    }
+    tr.disabled-true td {
+      text-decoration: line-through;
+      color: #999;
+    }
+    tr.expired-true td {
+      color: #f00;
+    }
+    .most-recent-token {
+      padding: 2em;
+      border: 1px solid #08c;
+      background: #ddd;
+    }
+  </style>
+
+</head>
+<body>
+
+  <div ng-app="simplefin">
+    <div ng-controller="TokenCtrl">
+      <h1>SimpleFIN Tokens</h1>
+
+      <h2>Generate a new token</h2>
+
+      <table class="form">
+        <tr>
+          <th>Allow access to view:</th>
+          <td>
+            <select ng-model="accountChoice">
+              <option>All accounts</option>
+              <option ng-repeat="account in accounts" value="{{account.name}}">{{ account.name }} (#{{ account.number }})
+              </option>
+            </select>
+          </td>
+        </tr>
+
+        <tr>
+          <th>What will use this token?</th>
+          <td>
+            <input type="text" ng-model="description" placeholder="example.com">
+          </td>
+        </tr>
+
+        <tr>
+          <th>Token will expire:</th>
+          <td>
+            <input type="date" ng-model="expirationDate">
+          </td>
+        </tr>
+
+        <tr>
+          <td></td>
+          <td>
+            <button ng-click="createToken()">Generate Token</button>
+          </td>
+        </tr>
+      </table>
+
+
+      <div ng-show="mostRecentToken">
+        This is your new SimpleFIN Setup Token.  Give this token (by copying and pasting it) to grant access to view your account information:
+        <div class="most-recent-token">{{ mostRecentToken }}</div>
+      </div>
+
+
+      <h2>Existing tokens</h2>
+      <table>
+        <tr>
+          <th>Account(s)</th>
+          <th>Description</th>
+          <th>Expires</th>
+          <th>Temporarily Disable</th>
+          <th></th>
+        </tr>
+        <tr ng-repeat="token in tokens" class="disabled-{{ token.disabled }} expired-{{ isExpired(token) }}">
+          <td>{{ token.accounts }}</td>
+          <td>{{ token.description }}</td>
+          <td>{{ token.expirationDate }}</td>
+          <td><input type="checkbox" ng-model="token.disabled"></td>
+          <td><button ng-click="deleteToken(token)">Delete</button></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <script src="vendor/angular.js"></script>
+  <script src="tokens.js"></script>
+</body>
+</html>
