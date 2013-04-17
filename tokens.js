@@ -1,41 +1,92 @@
 var app = angular.module('simplefin', []);
 
-app.controller('TokenCtrl', function($scope) {
+app.service('Server', function() {
+	this.sfin_url = 'https://www.example.com/sfin';
+
+	this.put = function(key, value) {
+		localStorage.setItem(key, JSON.stringify(value));
+	}
+	this.get = function(key) {
+		return JSON.parse(localStorage.getItem(key));
+	}
+	this.getAccounts = function() {
+		var accounts = this.get('accounts');
+		if (!angular.isArray(accounts)) {
+			accounts = [
+				{name: 'Checking', number: '1238394'},
+				{name: 'Savings', number: '28398403'}
+			];
+			this.put('accounts', accounts);
+		}
+		return accounts;
+	}
+	this.saveAccounts = function(accounts) {
+		this.put('accounts', accounts);
+	}
+	this.getTokens = function() {
+		var tokens = this.get('tokens');
+		if (!angular.isArray(tokens)) {
+			tokens = [];
+			this.put('tokens', tokens);
+		}
+		return tokens;
+	}
+	this.saveTokens = function(tokens) {
+		this.put('tokens', tokens);
+	}
+	this.generateSetupToken = function() {
+		var charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+		var access_token = '';
+		var length = 50 + Math.floor(Math.random() * 50);
+		while (access_token.length < length) {
+			var r = Math.floor(Math.random() * charset.length);
+			access_token += charset[r];
+		}
+		var setup_token = btoa(this.sfin_url + '\n' + access_token);
+		return {
+			'access_token': access_token,
+			'sfin_url': this.sfin_url,
+			'setup_token': setup_token,
+			// pretend to hash right now
+			'hash': access_token
+		}
+	}
+})
+
+app.controller('TokenCtrl', function($scope, Server) {
 	$scope.accountChoice = 'All accounts';
 	$scope.expirationDate = '2015-01-01';
-	$scope.accounts = [
-		{name: 'Checking', number: '123456'},
-		{name: 'Savings', number: '234567'}
-	];
-	$scope.tokens = [];
-	$scope.sfin_url = 'https://example.com/sfin'
+	$scope.accounts = Server.getAccounts();
+	$scope.tokens = Server.getTokens();
+
+	$scope.$watch('tokens', function() {
+		Server.saveTokens($scope.tokens);
+	}, true);
+	$scope.$watch('accounts', function() {
+		Server.saveAccounts($scope.accounts);
+	}, true);
 
 	$scope.createToken = function() {
-		// XXX fix this
 		var accountChoice = $scope.accountChoice;
 		var description = $scope.description;
 		var expirationDate = $scope.expirationDate;
-
-		// generate token -- this should be done on the server
-		// not in the javascript
-		var charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-		var token = '';
-		while (token.length < 50) {
-			var r = Math.floor(Math.random() * charset.length);
-			token += charset[r];
-		}
+		var generated = Server.generateSetupToken();
 
 		$scope.tokens.push({
-			token: token,
-			sfin_url: $scope.sfin_url,
+			hash: generated.hash,
+			sfin_url: generated.sfin_url,
 			accounts: accountChoice,
 			description: description,
-			expirationDate: expirationDate
+			expirationDate: expirationDate,
+			enabled: true,
+			last_used_ip: null,
+			last_used: null
 		});
+		// reset form
 		$scope.accountChoice = 'All accounts';
 		$scope.description = '';
 		$scope.expirationDate = '2015-01-01';
-		$scope.mostRecentToken = token;
+		$scope.mostRecentToken = generated.setup_token;
 	};
 
 	$scope.isExpired = function(token) {

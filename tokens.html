@@ -2,9 +2,15 @@
 <html>
 <head>
   <style>
+    * {
+      font-family: sans-serif;
+    }
     table.form th {
       text-align: left;
       font-family: sans-serif;
+    }
+    th {
+      text-align: left;
     }
     h1,h2,h3,h4,h5 {
       font-family: sans-serif;
@@ -13,13 +19,18 @@
       text-decoration: line-through;
       color: #999;
     }
-    tr.expired-true td {
+    .expired-true {
       color: #f00;
+      font-weight: bold;
     }
     .most-recent-token {
-      padding: 2em;
-      border: 1px solid #08c;
-      background: #ddd;
+      padding: 1.5em 2em;
+      border: 1px solid #ccc;
+      background: #ff9;
+      word-wrap: break-word;
+      border-radius: 6px;
+      margin: 2em auto;
+      max-width: 400px;
     }
   </style>
 
@@ -68,25 +79,27 @@
 
 
       <div ng-show="mostRecentToken">
-        This is your new SimpleFIN Setup Token.  Give this token (by copying and pasting it) to grant access to view your account information:
+        Below is your new SimpleFIN Setup Token.  Share this token with a SimpleFIN Reader (by copying and pasting it) to grant access to view your account information:
         <div class="most-recent-token">{{ mostRecentToken }}</div>
       </div>
 
 
       <h2>Existing tokens</h2>
-      <table>
+      <table width="100%">
         <tr>
-          <th>Account(s)</th>
+          <th>Accessible Account</th>
           <th>Description</th>
           <th>Expires</th>
-          <th>Temporarily Disable</th>
+          <th>Last used</th>
+          <th>Enabled</th>
           <th></th>
         </tr>
-        <tr ng-repeat="token in tokens" class="disabled-{{ token.disabled }} expired-{{ isExpired(token) }}">
+        <tr ng-repeat="token in tokens" class="disabled-{{ !token.enabled }}">
           <td>{{ token.accounts }}</td>
           <td>{{ token.description }}</td>
-          <td>{{ token.expirationDate }}</td>
-          <td><input type="checkbox" ng-model="token.disabled"></td>
+          <td class="expired-{{ isExpired(token) }}">{{ token.expirationDate }}</td>
+          <td>{{ token.last_used }} {{ token.last_used_ip }}</td>
+          <td><input type="checkbox" ng-model="token.enabled"></td>
           <td><button ng-click="deleteToken(token)">Delete</button></td>
         </tr>
       </table>
